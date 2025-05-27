@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from './lib/supabase';
+import { supabase, checkSupabaseConnection } from './lib/supabase';
 
 function App() {
   const [step, setStep] = useState('memberSelection');
@@ -21,10 +21,22 @@ function App() {
   });
   const [registrations, setRegistrations] = useState([]);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [useMemberCategories, setUseMemberCategories] = useState(() => {
     const saved = localStorage.getItem('useMemberCategories');
     return saved ? JSON.parse(saved) : true;
   });
+
+  // Verifica a conexão com o Supabase ao iniciar
+  useEffect(() => {
+    const checkConnection = async () => {
+      const isConnected = await checkSupabaseConnection();
+      if (!isConnected) {
+        setError('Erro ao conectar com o banco de dados. Por favor, recarregue a página.');
+      }
+    };
+    checkConnection();
+  }, []);
 
   // Carrega as inscrições do Supabase ao iniciar
   useEffect(() => {
@@ -124,6 +136,40 @@ function App() {
       setMessage('Ocorreu um erro ao salvar sua inscrição. Por favor, tente novamente.');
     }
   };
+
+  // Adiciona mensagem de erro no topo do componente
+  if (error) {
+    return (
+      <div className="container">
+        <div className="error-container" style={{ 
+          padding: '20px', 
+          backgroundColor: '#ffebee', 
+          color: '#c62828',
+          borderRadius: '4px',
+          margin: '20px auto',
+          maxWidth: '600px',
+          textAlign: 'center'
+        }}>
+          <h2>Erro</h2>
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#c62828',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              marginTop: '10px'
+            }}
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (step === 'memberSelection') {
     return (
@@ -325,6 +371,12 @@ function App() {
       </div>
     );
   }
+
+  return (
+    <>
+      {/* ... resto do JSX permanece igual ... */}
+    </>
+  );
 }
 
 export default App; 

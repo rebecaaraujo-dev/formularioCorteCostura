@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, checkSupabaseConnection } from '../lib/supabase';
 
 function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -14,9 +14,19 @@ function Admin() {
   useEffect(() => {
     document.title = 'Admin - Formulário Corte e Costura';
     
-    if (isLoggedIn) {
-      fetchRegistrations();
-    }
+    const checkConnection = async () => {
+      const isConnected = await checkSupabaseConnection();
+      if (!isConnected) {
+        setError('Erro ao conectar com o banco de dados. Por favor, recarregue a página.');
+        return;
+      }
+      
+      if (isLoggedIn) {
+        fetchRegistrations();
+      }
+    };
+    
+    checkConnection();
   }, [isLoggedIn]);
 
   const fetchRegistrations = async () => {
@@ -103,9 +113,44 @@ function Admin() {
     }
   };
 
+  // Adiciona mensagem de erro no topo do componente
+  const renderError = () => {
+    if (!error) return null;
+
+    return (
+      <div className="error-container" style={{ 
+        padding: '20px', 
+        backgroundColor: '#ffebee', 
+        color: '#c62828',
+        borderRadius: '4px',
+        margin: '20px auto',
+        maxWidth: '600px',
+        textAlign: 'center'
+      }}>
+        <h2>Erro</h2>
+        <p>{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#c62828',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            marginTop: '10px'
+          }}
+        >
+          Tentar Novamente
+        </button>
+      </div>
+    );
+  };
+
   if (!isLoggedIn) {
     return (
       <div className="admin-container">
+        {renderError()}
         <h1>Área Administrativa</h1>
         <form onSubmit={handleLogin} className="admin-login-form">
           <div className="form-group">
@@ -137,6 +182,7 @@ function Admin() {
 
   return (
     <div className="admin-container">
+      {renderError()}
       <h1>Painel Administrativo</h1>
       
       <div className="admin-controls">
