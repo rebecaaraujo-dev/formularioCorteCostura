@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
 
 function App() {
   const [step, setStep] = useState('memberSelection');
@@ -18,29 +19,51 @@ function App() {
       nonMember: 15
     };
   });
-  const [registrations, setRegistrations] = useState(() => {
-    const savedRegistrations = localStorage.getItem('registrations');
-    return savedRegistrations ? JSON.parse(savedRegistrations) : [];
-  });
+  const [registrations, setRegistrations] = useState([]);
   const [message, setMessage] = useState('');
   const [useMemberCategories, setUseMemberCategories] = useState(() => {
     const saved = localStorage.getItem('useMemberCategories');
     return saved ? JSON.parse(saved) : true;
   });
 
+  // Carrega as inscrições do Supabase ao iniciar
+  useEffect(() => {
+    fetchRegistrations();
+  }, []);
+
+  // Função para buscar inscrições do Supabase
+  const fetchRegistrations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('*')
+        .order('timestamp', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      setRegistrations(data || []);
+      
+      // Atualiza as vagas com base nas inscrições
+      const memberCount = data.filter(reg => reg.isMember).length;
+      const nonMemberCount = data.filter(reg => !reg.isMember).length;
+      
+      setVacancies({
+        member: 5 - memberCount,
+        nonMember: 15 - nonMemberCount
+      });
+    } catch (error) {
+      console.error('Erro ao buscar inscrições:', error);
+    }
+  };
+
   useEffect(() => {
     localStorage.setItem('vacancies', JSON.stringify(vacancies));
   }, [vacancies]);
 
   useEffect(() => {
-    localStorage.setItem('registrations', JSON.stringify(registrations));
-  }, [registrations]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('useMemberCategories');
-    if (saved !== null) {
-      setUseMemberCategories(JSON.parse(saved));
-    }
+    localStorage.setItem('useMemberCategories', JSON.stringify(useMemberCategories));
   }, []);
 
   const handleMemberSelection = (selection) => {
@@ -54,7 +77,7 @@ function App() {
   };
 
   const handleDirectRegistration = () => {
-    setIsMember(false); // Por padrão, marca como não membro
+    setIsMember(false);
     if (vacancies.nonMember > 0) {
       setStep('registrationForm');
     } else {
@@ -70,7 +93,7 @@ function App() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     const newRegistration = {
@@ -79,13 +102,27 @@ function App() {
       timestamp: new Date().toISOString()
     };
 
-    setRegistrations(prev => [...prev, newRegistration]);
-    setVacancies(prev => ({
-      ...prev,
-      [isMember ? 'member' : 'nonMember']: prev[isMember ? 'member' : 'nonMember'] - 1
-    }));
+    try {
+      const { error } = await supabase
+        .from('registrations')
+        .insert([newRegistration]);
 
-    setStep('success');
+      if (error) {
+        throw error;
+      }
+
+      // Atualiza o estado local
+      setRegistrations(prev => [newRegistration, ...prev]);
+      setVacancies(prev => ({
+        ...prev,
+        [isMember ? 'member' : 'nonMember']: prev[isMember ? 'member' : 'nonMember'] - 1
+      }));
+
+      setStep('success');
+    } catch (error) {
+      console.error('Erro ao salvar inscrição:', error);
+      setMessage('Ocorreu um erro ao salvar sua inscrição. Por favor, tente novamente.');
+    }
   };
 
   if (step === 'memberSelection') {

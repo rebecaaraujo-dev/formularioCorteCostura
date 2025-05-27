@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -11,14 +12,30 @@ function Admin() {
   });
 
   useEffect(() => {
-    // Atualiza o título da página
     document.title = 'Admin - Formulário Corte e Costura';
     
     if (isLoggedIn) {
-      const savedRegistrations = localStorage.getItem('registrations');
-      setRegistrations(savedRegistrations ? JSON.parse(savedRegistrations) : []);
+      fetchRegistrations();
     }
   }, [isLoggedIn]);
+
+  const fetchRegistrations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('*')
+        .order('timestamp', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      setRegistrations(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar inscrições:', error);
+      setError('Erro ao carregar as inscrições. Por favor, recarregue a página.');
+    }
+  };
 
   useEffect(() => {
     localStorage.setItem('useMemberCategories', JSON.stringify(useMemberCategories));
@@ -38,19 +55,47 @@ function Admin() {
     return new Date(dateString).toLocaleString('pt-BR');
   };
 
-  const handleDeleteRegistration = (index) => {
+  const handleDeleteRegistration = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir esta inscrição?')) {
-      const newRegistrations = registrations.filter((_, i) => i !== index);
-      setRegistrations(newRegistrations);
-      localStorage.setItem('registrations', JSON.stringify(newRegistrations));
+      try {
+        const { error } = await supabase
+          .from('registrations')
+          .delete()
+          .eq('id', id);
+
+        if (error) {
+          throw error;
+        }
+
+        // Atualiza a lista de inscrições
+        await fetchRegistrations();
+      } catch (error) {
+        console.error('Erro ao excluir inscrição:', error);
+        setError('Erro ao excluir a inscrição. Por favor, tente novamente.');
+      }
     }
   };
 
-  const handleToggleCategories = () => {
+  const handleToggleCategories = async () => {
     if (useMemberCategories) {
       if (window.confirm('Tem certeza que quer remover a classificação dos grupos?')) {
-        setUseMemberCategories(false);
-        localStorage.setItem('vacancies', JSON.stringify({ member: 0, nonMember: 20 }));
+        try {
+          const { data: registrationsData } = await supabase
+            .from('registrations')
+            .select('count')
+            .eq('isMember', true);
+
+          if (registrationsData && registrationsData.length > 0) {
+            alert('Existem inscrições de membros registradas. Por favor, revise as inscrições antes de desativar as categorias.');
+            return;
+          }
+
+          setUseMemberCategories(false);
+          localStorage.setItem('vacancies', JSON.stringify({ member: 0, nonMember: 20 }));
+        } catch (error) {
+          console.error('Erro ao verificar inscrições:', error);
+          setError('Erro ao alterar as categorias. Por favor, tente novamente.');
+        }
       }
     } else {
       setUseMemberCategories(true);
@@ -135,8 +180,8 @@ function Admin() {
                 </tr>
               </thead>
               <tbody>
-                {registrations.map((registration, index) => (
-                  <tr key={index}>
+                {registrations.map((registration) => (
+                  <tr key={registration.id}>
                     <td>{formatDate(registration.timestamp)}</td>
                     <td>{registration.fullName}</td>
                     <td>{registration.age}</td>
@@ -147,7 +192,7 @@ function Admin() {
                     <td>{registration.reason}</td>
                     <td>
                       <button 
-                        onClick={() => handleDeleteRegistration(index)}
+                        onClick={() => handleDeleteRegistration(registration.id)}
                         className="delete-button"
                         title="Excluir inscrição"
                       >
