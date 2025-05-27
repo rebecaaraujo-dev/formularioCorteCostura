@@ -10,6 +10,8 @@ function Admin() {
     const saved = localStorage.getItem('useMemberCategories');
     return saved ? JSON.parse(saved) : true;
   });
+  const [vacancies, setVacancies] = useState({ member: 5, nonMember: 15 });
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     document.title = 'Admin - Formulário Corte e Costura';
@@ -68,17 +70,33 @@ function Admin() {
   const handleDeleteRegistration = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir esta inscrição?')) {
       try {
-        const { error } = await supabase
+        // Deleta do Supabase
+        const { error: deleteError } = await supabase
           .from('registrations')
           .delete()
           .eq('id', id);
 
-        if (error) {
-          throw error;
+        if (deleteError) {
+          throw new Error(`Erro ao excluir: ${deleteError.message}`);
         }
 
-        // Atualiza a lista de inscrições
-        await fetchRegistrations();
+        // Atualiza a lista local
+        setRegistrations(prev => prev.filter(reg => reg.id !== id));
+
+        // Atualiza o contador de vagas
+        const deletedRegistration = registrations.find(reg => reg.id === id);
+        if (deletedRegistration) {
+          setVacancies(prev => ({
+            ...prev,
+            [deletedRegistration.isMember ? 'member' : 'nonMember']: 
+              prev[deletedRegistration.isMember ? 'member' : 'nonMember'] + 1
+          }));
+        }
+
+        // Mostra mensagem de sucesso temporária
+        setMessage('Inscrição excluída com sucesso!');
+        setTimeout(() => setMessage(''), 3000);
+
       } catch (error) {
         console.error('Erro ao excluir inscrição:', error);
         setError('Erro ao excluir a inscrição. Por favor, tente novamente.');
@@ -183,6 +201,18 @@ function Admin() {
   return (
     <div className="admin-container">
       {renderError()}
+      {message && (
+        <div className="success-message" style={{
+          padding: '10px 20px',
+          backgroundColor: '#e8f5e9',
+          color: '#2e7d32',
+          borderRadius: '4px',
+          margin: '10px 0',
+          textAlign: 'center'
+        }}>
+          {message}
+        </div>
+      )}
       <h1>Painel Administrativo</h1>
       
       <div className="admin-controls">

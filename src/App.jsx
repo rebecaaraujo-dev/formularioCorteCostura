@@ -108,32 +108,67 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const newRegistration = {
-      ...formData,
-      isMember,
-      timestamp: new Date().toISOString()
-    };
-
     try {
-      const { error } = await supabase
-        .from('registrations')
-        .insert([newRegistration]);
+      const newRegistration = {
+        fullName: formData.fullName.trim(),
+        age: parseInt(formData.age),
+        phone: formData.phone.trim(),
+        neighborhood: formData.neighborhood,
+        canSew: formData.canSew,
+        reason: formData.reason.trim(),
+        isMember,
+        timestamp: new Date().toISOString()
+      };
 
-      if (error) {
-        throw error;
+      // Validações adicionais
+      if (newRegistration.age <= 0) {
+        setMessage('A idade deve ser maior que 0');
+        return;
       }
 
-      // Atualiza o estado local
-      setRegistrations(prev => [newRegistration, ...prev]);
+      if (!newRegistration.neighborhood) {
+        setMessage('Por favor, selecione um bairro');
+        return;
+      }
+
+      // Envia para o Supabase
+      const { data, error } = await supabase
+        .from('registrations')
+        .insert([newRegistration])
+        .select();
+
+      if (error) {
+        console.error('Erro ao salvar inscrição:', error);
+        setMessage('Ocorreu um erro ao salvar sua inscrição. Por favor, tente novamente.');
+        return;
+      }
+
+      // Atualiza o estado local apenas se o envio for bem-sucedido
+      setRegistrations(prev => [data[0], ...prev]);
+      
+      // Atualiza as vagas disponíveis
       setVacancies(prev => ({
         ...prev,
         [isMember ? 'member' : 'nonMember']: prev[isMember ? 'member' : 'nonMember'] - 1
       }));
 
+      // Limpa o formulário
+      setFormData({
+        fullName: '',
+        age: '',
+        phone: '',
+        neighborhood: '',
+        canSew: '',
+        reason: ''
+      });
+
+      // Mostra mensagem de sucesso
       setStep('success');
+      setMessage('');
+
     } catch (error) {
-      console.error('Erro ao salvar inscrição:', error);
-      setMessage('Ocorreu um erro ao salvar sua inscrição. Por favor, tente novamente.');
+      console.error('Erro ao processar inscrição:', error);
+      setMessage('Ocorreu um erro ao processar sua inscrição. Por favor, tente novamente.');
     }
   };
 
@@ -314,15 +349,21 @@ function App() {
 
           <div className="form-group">
             <label htmlFor="neighborhood">Bairro</label>
-            <input
-              type="text"
+            <select
               id="neighborhood"
               name="neighborhood"
               value={formData.neighborhood}
               onChange={handleInputChange}
               required
-              placeholder="Digite seu bairro"
-            />
+            >
+              <option value="">Selecione seu bairro</option>
+              <option value="Conjunto Urucânia">Conjunto Urucânia</option>
+              <option value="Barro Vermelho">Barro Vermelho</option>
+              <option value="Saquaçu">Saquaçu</option>
+              <option value="Coqueiral">Coqueiral</option>
+              <option value="Paciência">Paciência</option>
+              <option value="Santa Cruz">Santa Cruz</option>
+            </select>
           </div>
 
           <div className="form-group">
@@ -337,18 +378,26 @@ function App() {
               <option value="">Selecione uma opção</option>
               <option value="Não, nunca costurei">Não, nunca costurei</option>
               <option value="Sim, um pouco">Sim, um pouco</option>
-              <option value="Sim, costumo regularmente">Sim, costumo regularmente</option>
+              <option value="Sim, costumo regularmente">Sim, costuro regularmente</option>
             </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="reason">Por que você quer participar do curso?</label>
+            <label htmlFor="reason">
+              Por que você quer participar do curso?
+              <span style={{ 
+                marginLeft: '5px', 
+                color: '#999', 
+                fontSize: '0.9em' 
+              }}>
+                (opcional)
+              </span>
+            </label>
             <textarea
               id="reason"
               name="reason"
               value={formData.reason}
               onChange={handleInputChange}
-              required
               placeholder="Conte-nos um pouco sobre sua motivação"
             />
           </div>
