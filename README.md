@@ -1,31 +1,28 @@
-# formularioCorteCostura
+# Formulário de Inscrição - Curso de Corte e Costura ICNV
 
-Formulário de Inscrição – Curso de Corte e Costura
-Este projeto é um formulário digital de inscrição para o curso gratuito de iniciação à costura, promovido pela Igreja Cristã Nova Vida (ICNV) de Urucânia. O objetivo é facilitar o processo de inscrição para moradoras de Urucânia e regiões vizinhas, oferecendo uma solução acessível e funcional.
+Sistema de inscrição para o curso de corte e costura da ICNV em Urucânia.
 
-✨ Funcionalidades
-Seleção de perfil: Permite que a usuária escolha se é membro da igreja ou não.
+## Funcionalidades
 
-Controle de vagas: Limita as inscrições a 5 vagas para membros e 15 para não membros, com contagem dinâmica de vagas restantes.
+- Limite fixo de 20 vagas
+- Formulário de inscrição com campos para nome completo, idade, telefone/WhatsApp, bairro, experiência em costura e motivo da inscrição
+- Painel administrativo para visualização e gerenciamento das inscrições
+- Autenticação simples para acesso ao painel administrativo
 
-Bloqueio de inscrições: Impede novas inscrições quando as vagas se esgotam para cada grupo.
+## Tecnologias
 
-Formulário de inscrição: Coleta informações como nome completo, idade, telefone/WhatsApp, posse de máquina de costura, experiência em costura e motivo da inscrição.
+- React
+- Vite
+- Supabase (Banco de dados e autenticação)
 
-Página de administração: Visualiza e gerencia as inscrições realizadas, com dados armazenados no localStorage.
+## Configuração
 
-🛠️ Tecnologias Utilizadas
-HTML5
+1. Clone o repositório
+2. Instale as dependências: `npm install`
+3. Execute o projeto: `npm run dev`
 
-CSS3
+## Acesso ao Painel Administrativo
 
-JavaScript (Vanilla)
-
-Vite – Ferramenta de build para desenvolvimento rápido
-
-LocalStorage – Armazenamento local de dados no navegador
-
-🌐 Link de Demonstração
-Você pode acessar a versão online do formulário através do seguinte link:
-
-👉 corte-costura-icnv-urucania.vercel.app
+- URL: /admin
+- Usuário: icnvurucania
+- Senha: 1234
