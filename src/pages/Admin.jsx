@@ -11,6 +11,9 @@ function Admin() {
   });
 
   useEffect(() => {
+    // Atualiza o título da página
+    document.title = 'Admin - Formulário Corte e Costura';
+    
     if (isLoggedIn) {
       const savedRegistrations = localStorage.getItem('registrations');
       setRegistrations(savedRegistrations ? JSON.parse(savedRegistrations) : []);
@@ -45,16 +48,12 @@ function Admin() {
 
   const handleToggleCategories = () => {
     if (useMemberCategories) {
-      // Se está ativado e vai desativar, pede confirmação
       if (window.confirm('Tem certeza que quer remover a classificação dos grupos?')) {
         setUseMemberCategories(false);
-        // Desativando categorias - todas as vagas vão para não-membros
         localStorage.setItem('vacancies', JSON.stringify({ member: 0, nonMember: 20 }));
       }
     } else {
-      // Se está desativado e vai ativar, não precisa de confirmação
       setUseMemberCategories(true);
-      // Reativando categorias
       localStorage.setItem('vacancies', JSON.stringify({ member: 5, nonMember: 15 }));
     }
   };

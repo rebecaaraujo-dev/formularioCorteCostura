@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Admin from './components/Admin';
 
 function App() {
   const [step, setStep] = useState('memberSelection');
@@ -24,25 +23,10 @@ function App() {
     return savedRegistrations ? JSON.parse(savedRegistrations) : [];
   });
   const [message, setMessage] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false);
   const [useMemberCategories, setUseMemberCategories] = useState(() => {
     const saved = localStorage.getItem('useMemberCategories');
     return saved ? JSON.parse(saved) : true;
   });
-
-  useEffect(() => {
-    // Check if we're on the admin route
-    const isAdminRoute = window.location.pathname === '/admin';
-    setIsAdmin(isAdminRoute);
-
-    // Listen for route changes
-    const handleRouteChange = () => {
-      setIsAdmin(window.location.pathname === '/admin');
-    };
-
-    window.addEventListener('popstate', handleRouteChange);
-    return () => window.removeEventListener('popstate', handleRouteChange);
-  }, []);
 
   useEffect(() => {
     localStorage.setItem('vacancies', JSON.stringify(vacancies));
@@ -103,10 +87,6 @@ function App() {
 
     setStep('success');
   };
-
-  if (isAdmin) {
-    return <Admin />;
-  }
 
   if (step === 'memberSelection') {
     return (
@@ -250,26 +230,20 @@ function App() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="neighborhood">Em qual bairro você mora?</label>
-            <select
+            <label htmlFor="neighborhood">Bairro</label>
+            <input
+              type="text"
               id="neighborhood"
               name="neighborhood"
               value={formData.neighborhood}
               onChange={handleInputChange}
               required
-            >
-              <option value="">Selecione seu bairro</option>
-              <option value="Conjunto Urucânia">Conjunto Urucânia</option>
-              <option value="Barro Vermelho">Barro Vermelho</option>
-              <option value="Saquaçu">Saquaçu</option>
-              <option value="Coqueiral">Coqueiral</option>
-              <option value="Paciência">Paciência</option>
-              <option value="Santa Cruz">Santa Cruz</option>
-            </select>
+              placeholder="Digite seu bairro"
+            />
           </div>
 
           <div className="form-group">
-            <label htmlFor="canSew">Você já sabe costurar?</label>
+            <label htmlFor="canSew">Você já tem alguma experiência com costura?</label>
             <select
               id="canSew"
               name="canSew"
@@ -278,25 +252,25 @@ function App() {
               required
             >
               <option value="">Selecione uma opção</option>
-              <option value="sim">Sim</option>
-              <option value="não">Não</option>
+              <option value="Não, nunca costurei">Não, nunca costurei</option>
+              <option value="Sim, um pouco">Sim, um pouco</option>
+              <option value="Sim, costumo regularmente">Sim, costumo regularmente</option>
             </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="reason">Por que você quer participar do curso?<span className="optional-text">(opcional)</span></label>
+            <label htmlFor="reason">Por que você quer participar do curso?</label>
             <textarea
               id="reason"
               name="reason"
               value={formData.reason}
               onChange={handleInputChange}
-              placeholder="Conte-nos um pouco sobre sua motivação..."
+              required
+              placeholder="Conte-nos um pouco sobre sua motivação"
             />
           </div>
 
-          <div className="button-group">
-            <button type="submit">Confirmar Inscrição</button>
-          </div>
+          <button type="submit">Enviar Inscrição</button>
         </form>
       </div>
     );
@@ -305,10 +279,12 @@ function App() {
   if (step === 'success') {
     return (
       <div className="container">
-        <h1>Inscrição Confirmada!</h1>
-        <p className="success-message">
-          Que alegria ter você conosco! Em breve entraremos em contato com mais informações sobre o início das aulas.
-        </p>
+        <h1>Inscrição Realizada com Sucesso!</h1>
+        <p>Parabéns! Sua inscrição foi registrada.</p>
+        <p>Em breve entraremos em contato através do número de telefone/WhatsApp fornecido com mais informações sobre o início das aulas.</p>
+        <button onClick={() => setStep('memberSelection')} className="back-to-home">
+          Voltar para a Página Inicial
+        </button>
       </div>
     );
   }
