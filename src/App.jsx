@@ -1,0 +1,317 @@
+import { useState, useEffect } from 'react';
+import Admin from './components/Admin';
+
+function App() {
+  const [step, setStep] = useState('memberSelection');
+  const [isMember, setIsMember] = useState(null);
+  const [formData, setFormData] = useState({
+    fullName: '',
+    age: '',
+    phone: '',
+    neighborhood: '',
+    canSew: '',
+    reason: ''
+  });
+  const [vacancies, setVacancies] = useState(() => {
+    const savedVacancies = localStorage.getItem('vacancies');
+    return savedVacancies ? JSON.parse(savedVacancies) : {
+      member: 5,
+      nonMember: 15
+    };
+  });
+  const [registrations, setRegistrations] = useState(() => {
+    const savedRegistrations = localStorage.getItem('registrations');
+    return savedRegistrations ? JSON.parse(savedRegistrations) : [];
+  });
+  const [message, setMessage] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [useMemberCategories, setUseMemberCategories] = useState(() => {
+    const saved = localStorage.getItem('useMemberCategories');
+    return saved ? JSON.parse(saved) : true;
+  });
+
+  useEffect(() => {
+    // Check if we're on the admin route
+    const isAdminRoute = window.location.pathname === '/admin';
+    setIsAdmin(isAdminRoute);
+
+    // Listen for route changes
+    const handleRouteChange = () => {
+      setIsAdmin(window.location.pathname === '/admin');
+    };
+
+    window.addEventListener('popstate', handleRouteChange);
+    return () => window.removeEventListener('popstate', handleRouteChange);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('vacancies', JSON.stringify(vacancies));
+  }, [vacancies]);
+
+  useEffect(() => {
+    localStorage.setItem('registrations', JSON.stringify(registrations));
+  }, [registrations]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('useMemberCategories');
+    if (saved !== null) {
+      setUseMemberCategories(JSON.parse(saved));
+    }
+  }, []);
+
+  const handleMemberSelection = (selection) => {
+    setIsMember(selection);
+    const availableVacancies = selection ? vacancies.member : vacancies.nonMember;
+    if (availableVacancies > 0) {
+      setStep('registrationForm');
+    } else {
+      setMessage('Infelizmente as vagas para este grupo já foram preenchidas');
+    }
+  };
+
+  const handleDirectRegistration = () => {
+    setIsMember(false); // Por padrão, marca como não membro
+    if (vacancies.nonMember > 0) {
+      setStep('registrationForm');
+    } else {
+      setMessage('Infelizmente todas as vagas já foram preenchidas');
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    const newRegistration = {
+      ...formData,
+      isMember,
+      timestamp: new Date().toISOString()
+    };
+
+    setRegistrations(prev => [...prev, newRegistration]);
+    setVacancies(prev => ({
+      ...prev,
+      [isMember ? 'member' : 'nonMember']: prev[isMember ? 'member' : 'nonMember'] - 1
+    }));
+
+    setStep('success');
+  };
+
+  if (isAdmin) {
+    return <Admin />;
+  }
+
+  if (step === 'memberSelection') {
+    return (
+      <div className="container">
+        <h1>Curso de Corte e Costura 2.0</h1>
+        <p className="container-info">Seja bem-vinda ao nosso Curso de Iniciação à Costura!</p>
+        <div className="course-info">
+          <p>Uma iniciativa da ICNV de Urucânia para abençoar o conjunto Urucânia e regiões vizinhas, este curso foi criado com muito carinho para quem sempre sonhou em aprender a costurar, mas não sabia por onde começar.</p>
+          <p>Ministrado pela Professora Maristela Lopes, costureira com mais de 15 anos de experiência, o curso oferece um ambiente leve, acolhedor e cheio de inspiração. Não se preocupe com equipamentos — você só precisa trazer uma tesoura e um tecido. Aqui, vamos aprender juntos, com o que temos em mãos, e dar os primeiros pontos dessa jornada criativa.</p>
+          <p>Venha fazer parte desse momento especial. As vagas são limitadas!</p>
+        </div>
+
+        <div className="info-container">
+          <h2>Informações</h2>
+          <div className="info-grid">
+            <div className="info-item">
+              <h3>Horário</h3>
+              <p>Quintas-feiras, 14h às 17h</p>
+            </div>
+            <div className="info-item">
+              <h3>Local</h3>
+              <p>Igreja Cristã Nova Vida em Urucânia</p>
+              <div className="address">
+                <p>R. José Silton Pinheiro, 141 - CASA 01</p>
+                <p>Paciência, Rio de Janeiro - RJ</p>
+              </div>
+              <a 
+                href="https://maps.google.com/?q=R. José Silton Pinheiro, 141 - CASA 01 - Paciência, Rio de Janeiro - RJ, 23573-340" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="map-link"
+              >
+                Ver no Google Maps
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div className="vacancies-info">
+          <p>✨ Vagas Disponíveis ✨</p>
+          {useMemberCategories ? (
+            <>
+              <p>Membros da igreja ICNV em Urucânia: {vacancies.member}</p>
+              <p>Não membros: {vacancies.nonMember}</p>
+            </>
+          ) : (
+            <p>Total de vagas: {vacancies.nonMember}</p>
+          )}
+        </div>
+
+        {useMemberCategories ? (
+          <>
+            <h2>Você é membro da nossa igreja?</h2>
+            <div className="radio-group">
+              <div className="radio-option">
+                <input
+                  type="radio"
+                  id="member-yes"
+                  name="isMember"
+                  onChange={() => handleMemberSelection(true)}
+                />
+                <label htmlFor="member-yes">Sim</label>
+              </div>
+              <div className="radio-option">
+                <input
+                  type="radio"
+                  id="member-no"
+                  name="isMember"
+                  onChange={() => handleMemberSelection(false)}
+                />
+                <label htmlFor="member-no">Não</label>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="registration-button-container">
+            <button onClick={handleDirectRegistration} className="registration-button">
+              Fazer Inscrição
+            </button>
+          </div>
+        )}
+        {message && <p className="error-message">{message}</p>}
+      </div>
+    );
+  }
+
+  if (step === 'registrationForm') {
+    return (
+      <div className="container">
+        <button 
+          type="button" 
+          className="back-button" 
+          onClick={() => setStep('memberSelection')}
+          aria-label="Voltar"
+        >
+          ←
+        </button>
+        <h1>Formulário de Inscrição</h1>
+        <div className="vacancies-info">
+          <p>✨ Vagas Restantes: {isMember ? vacancies.member : vacancies.nonMember} ✨</p>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="fullName">Nome completo</label>
+            <input
+              type="text"
+              id="fullName"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleInputChange}
+              required
+              placeholder="Digite seu nome completo"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="age">Idade</label>
+            <input
+              type="number"
+              id="age"
+              name="age"
+              value={formData.age}
+              onChange={handleInputChange}
+              required
+              min="1"
+              placeholder="Digite sua idade"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="phone">Telefone/WhatsApp</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              required
+              placeholder="(00) 00000-0000"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="neighborhood">Em qual bairro você mora?</label>
+            <select
+              id="neighborhood"
+              name="neighborhood"
+              value={formData.neighborhood}
+              onChange={handleInputChange}
+              required
+            >
+              <option value="">Selecione seu bairro</option>
+              <option value="Conjunto Urucânia">Conjunto Urucânia</option>
+              <option value="Barro Vermelho">Barro Vermelho</option>
+              <option value="Saquaçu">Saquaçu</option>
+              <option value="Coqueiral">Coqueiral</option>
+              <option value="Paciência">Paciência</option>
+              <option value="Santa Cruz">Santa Cruz</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="canSew">Você já sabe costurar?</label>
+            <select
+              id="canSew"
+              name="canSew"
+              value={formData.canSew}
+              onChange={handleInputChange}
+              required
+            >
+              <option value="">Selecione uma opção</option>
+              <option value="sim">Sim</option>
+              <option value="não">Não</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="reason">Por que você quer participar do curso?<span className="optional-text">(opcional)</span></label>
+            <textarea
+              id="reason"
+              name="reason"
+              value={formData.reason}
+              onChange={handleInputChange}
+              placeholder="Conte-nos um pouco sobre sua motivação..."
+            />
+          </div>
+
+          <div className="button-group">
+            <button type="submit">Confirmar Inscrição</button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  if (step === 'success') {
+    return (
+      <div className="container">
+        <h1>Inscrição Confirmada!</h1>
+        <p className="success-message">
+          Que alegria ter você conosco! Em breve entraremos em contato com mais informações sobre o início das aulas.
+        </p>
+      </div>
+    );
+  }
+}
+
+export default App; 
