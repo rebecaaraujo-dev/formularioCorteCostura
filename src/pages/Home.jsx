@@ -33,7 +33,7 @@ function Home() {
 
   return (
     <div className="container">
-      <h1>Curso de Corte e Costura 2.0</h1>
+      <h1>Curso de Modelista, Corte e Costura 2.0</h1>
       <p className="container-info">Seja bem-vinda ao nosso Curso de Iniciação à Costura!</p>
       <div className="course-info">
         <p>Uma iniciativa da ICNV de Urucânia para abençoar o conjunto Urucânia e regiões vizinhas, este curso foi criado com muito carinho para quem sempre sonhou em aprender a costurar, mas não sabia por onde começar.</p>
