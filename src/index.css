@@ -275,21 +275,19 @@ button:disabled {
 
 .map-link {
   display: inline-block;
-  background-color: var(--container-bg);
   color: var(--primary-dark);
   text-decoration: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
+  font-size: 0.9rem;
   margin-top: 1rem;
-  font-weight: 500;
-  border: 2px solid var(--primary-color);
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--primary-dark);
+  border-radius: 4px;
   transition: all 0.2s ease;
 }
 
 .map-link:hover {
-  background-color: var(--primary-color);
+  background-color: var(--primary-dark);
   color: white;
-  transform: translateY(-2px);
 }
 
 .map-link:active {
@@ -432,23 +430,6 @@ button[type="submit"]:active {
   margin-top: 0.5rem;
 }
 
-.map-link {
-  display: inline-block;
-  color: var(--primary-dark);
-  text-decoration: none;
-  font-size: 0.9rem;
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--primary-dark);
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.map-link:hover {
-  background-color: var(--primary-dark);
-  color: white;
-}
-
 @media (max-width: 768px) {
   .container {
     padding: 2rem;
@@ -526,13 +507,6 @@ button[type="submit"]:active {
   border-collapse: collapse;
   font-size: 0.9rem;
   min-width: 800px;
-}
-
-.registrations-table th,
-.registrations-table td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border-color);
 }
 
 .registrations-table th {
@@ -808,7 +782,3 @@ button[type="submit"]:active {
   font-weight: 600;
   color: var(--primary-dark);
 }
-
-.registration-button-container {
-  margin-top: 1.5rem;
-} 
